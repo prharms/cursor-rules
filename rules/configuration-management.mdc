@@ -1,5 +1,5 @@
 ---
-appliesTo: ["claude_word_qa/**/*.py", "*.toml", "*.yaml", "*.json"]
+alwaysApply: true
 priority: high
 context: ["configuration", "settings", "environment"]
 ---

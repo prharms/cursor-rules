@@ -1,7 +1,8 @@
 ---
-appliesTo: ["claude_word_qa/**/*.py", "tests/**/*.py"]
+alwaysApply: true
 priority: medium
 context: ["testing", "coverage", "quality-assurance"]
+appliesTo: ["tests/**/*.py", "**/*test*.py"]
 ---
 
 # Test Coverage Standards

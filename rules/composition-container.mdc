@@ -1,7 +1,6 @@
 ---
 alwaysApply: true
 priority: high
-appliesTo: ["legiscan_loader/**/*.py", "legiscan_loader/main.py", "legiscan_loader/cli.py"]
 ---
 # Composition Root & Container Usage
 

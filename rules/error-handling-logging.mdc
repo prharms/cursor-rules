@@ -1,5 +1,5 @@
 ---
-appliesTo: ["claude_word_qa/**/*.py"]
+alwaysApply: true
 priority: high
 context: ["error-handling", "logging", "debugging"]
 ---
@@ -7,6 +7,74 @@ context: ["error-handling", "logging", "debugging"]
 # Error Handling and Logging Standards
 
 All code must implement comprehensive error handling with structured logging for debugging, monitoring, and user experience.
+
+## ENTERPRISE-GRADE LOGGING PRINCIPLES (MANDATORY)
+
+### Separation of Concerns: User Output vs. Application Logs
+- DO: Treat user-facing console output (CLI prompts, progress, success banners) as UI, not logs
+- DO: Log operational events to the configured logger, not via `print()`
+- DO: Avoid duplicate messages. A message rendered to the console UI must not be logged again at the same level
+- DO: For UI messages, only log warnings and errors; suppress info/success UI messages from the logger
+- DON'T: Mix `print()` and `logger.info()` for the same message
+
+### Structured, Context-Rich Logs
+- DO: Use structured logs with consistent fields (operation, state, session_id, file, duration, status, error_type)
+- DO: Include correlation/request IDs when available; generate one per CLI invocation if missing
+- DO: Prefer key-value context via `extra={...}`
+- DO: Ensure timestamps include timezone or are UTC
+
+### Sensitive Data Handling
+- DO: Redact secrets, API keys, auth tokens, and PII from logs
+- DON'T: Log full payloads or raw document contents; log counts, hashes, or metadata instead
+
+### Log Levels and Signal-to-Noise
+- DEBUG: Diagnostic details safe to disable in production
+- INFO: High-level milestones (start/finish operations), counts, durations
+- WARNING: Unexpected but recoverable issues
+- ERROR: Operation failed; include actionable context
+- CRITICAL: Process cannot continue; immediate attention required
+- DON'T: Use INFO to mirror every UI line; prefer DEBUG for verbose tracing
+
+### Consistent Formatting and Transport
+- Default console handler: human-readable, concise
+- File (or JSON) handler: structured logging suitable for ingestion
+- Provide opt-in JSON logging via env `JSON_LOGS=true` without breaking tests/CLIs
+- Avoid double-propagation; ensure handlers and `propagate` settings prevent duplicates
+
+### Centralized Logging Configuration (MANDATORY)
+- All modules must obtain a logger from a single configuration function (e.g., `setup_logging`)
+- DO NOT configure handlers/formatters in individual modules
+- The composition container is responsible for logger creation and passing it via DI
+- Tests may override verbosity/format via the centralized function only
+
+### Unified Logging Style (MANDATORY)
+- Single logger namespace: root logger `legiscan_loader`; child loggers per module (e.g., `legiscan_loader.commands`)
+- One format per transport:
+  - Console (human): concise text, no duplicate UI lines, WARNING+ by default
+  - File/JSON: structured payloads; include operation, status, duration, counts
+- UI vs Logs:
+  - UI (print): human-friendly messages. Use prefixes only for non-info levels:
+    - info: plain text without any prefix
+    - success: `[SUCCESS] ...`
+    - warning: `[WARNING] ...`
+    - error: `[ERROR] ...`
+    Avoid `[INFO]` spam entirely
+  - Logs: never mirror UI info/success lines; only warnings/errors from UI may be logged
+- Message style:
+  - Present tense, consistent capitalization, no trailing periods for non-sentences
+  - Redact secrets; log counts/ids not payloads
+  - Use `extra={"operation": ..., "context": {...}}` for key fields; prefer snake_case keys
+- Correlation:
+  - Generate a correlation id per CLI invocation; attach to all logs in `extra`
+
+### Performance and Rate Control
+- DO: Log timing and counts for critical operations
+- DO: Consider sampling or aggregation for high-volume events
+- DON'T: Log inside tight loops without purpose
+
+### Testability
+- Tests must not assert on incidental log formatting; assert on behavior
+- Provide hooks to set logger level in tests to reduce noise
 
 ## MANDATORY CHECKPOINT: Before implementing error-prone operations
 
@@ -171,12 +239,14 @@ class UserFriendlyErrorHandler:
 - Include relevant context in log messages
 - Use structured logging with key-value pairs
 - Log at appropriate verbosity levels
+- Never duplicate UI console messages in logs at the same level; only warnings/errors from UI may be logged
 
 **DON'T:**
 - Mix print statements with logging
 - Log sensitive information
 - Use inconsistent log formats
 - Over-log or under-log operations
+ - Log the same message twice (e.g., UI print + logger.info of identical text)
 
 **Example:**
 ```python
@@ -291,6 +361,42 @@ STRUCTURED_FORMAT = {
     'function': '%(funcName)s',
     'line': '%(lineno)d'
 }
+
+def configure_logging(verbose: bool = False, json_logs: bool = False) -> logging.Logger:
+    """Centralized logger configuration.
+    - Single root: 'legiscan_loader'
+    - Console handler for humans; optional JSON/file handler for ingestion
+    - Prevent duplicate handlers
+    """
+    import logging, sys, json
+    logger = logging.getLogger('legiscan_loader')
+    logger.setLevel(logging.DEBUG if verbose else logging.INFO)
+    logger.handlers.clear()
+    logger.propagate = False
+
+    console = logging.StreamHandler(sys.stdout)
+    console.setLevel(logging.DEBUG if verbose else logging.INFO)
+    if json_logs:
+        class JsonFormatter(logging.Formatter):
+            def format(self, record: logging.LogRecord) -> str:
+                payload = {
+                    'ts': self.formatTime(record, LOG_DATE_FORMAT),
+                    'logger': record.name,
+                    'level': record.levelname,
+                    'msg': record.getMessage(),
+                    'module': record.module,
+                    'func': record.funcName,
+                    'line': record.lineno,
+                }
+                if hasattr(record, 'context'):
+                    payload['context'] = record.context
+                return json.dumps(payload)
+        console.setFormatter(JsonFormatter())
+    else:
+        console.setFormatter(logging.Formatter(LOG_FORMAT, LOG_DATE_FORMAT))
+    logger.addHandler(console)
+
+    return logger
 ```
 
 ### Performance Logging

@@ -5,42 +5,46 @@ This directory contains organized rule files that guide the AI assistant's behav
 ## Rule Files Overview
 
 ### Critical Priority Rules (Always Applied)
+- **`generic-rules-only.mdc`** - All rules must be portable and project-agnostic
 - **`test-quality-requirements.mdc`** - All tests must pass without exception
 - **`tests-location.mdc`** - Behavior-driven testing standards and file organization
 - **`no-emojis.mdc`** - Prohibits emoji usage throughout the project
 - **`incremental-collaboration.mdc`** - Prevents reversing established work during sessions
 - **`security-privacy.mdc`** - Security and data privacy protection standards
+- **`destructive-ops-safety.mdc`** - Ironclad safeguards for destructive operations
+- **`env-var-safety.mdc`** - Mandatory scoping and cleanup of environment variables
 
 ### High Priority Rules
+- **`composition-container.mdc`** - Centralized composition root and dependency injection
 - **`oop-solid.mdc`** - Object-oriented programming and SOLID principles with mandatory checkpoints
+- **`mypy-type-safety.mdc`** - Type safety and static analysis requirements
 - **`performance-optimization.mdc`** - Performance standards for resource-intensive operations
 - **`configuration-management.mdc`** - Centralized and validated configuration management
-- **`error-handling-logging.mdc`** - Comprehensive error handling and structured logging
+- **`error-handling-logging.mdc`** - Comprehensive error handling and structured logging (UI/log separation)
 - **`data-validation.mdc`** - Input validation and schema compliance standards
+- **`monitoring-observability.mdc`** - Monitoring, metrics, and health checks
 - **`windows-shell.mdc`** - Windows PowerShell command guidelines and restrictions
+- **`git-commit-guidance.mdc`** - Version control best practices
 
-### Medium Priority Rules  
+### Medium Priority Rules
 - **`test-coverage-standards.mdc`** - 80% minimum test coverage per module requirement
 - **`dead-code-detection.mdc`** - Systematic identification and safe removal of unused code
 - **`documentation-standards.mdc`** - Comprehensive documentation and code comment standards
-- **`dependency-management.mdc`** - Secure and maintainable dependency handling
-- **`monitoring-observability.mdc`** - System monitoring and performance tracking
 - **`documentation-updates.mdc`** - Documentation maintenance requirements
-- **`git-commit-guidance.mdc`** - Version control best practices
+- **`dependency-management.mdc`** - Secure and maintainable dependency handling
 
 ## Rule Targeting Strategy
 
 ### File Pattern Targeting
-- **Python Code**: Multiple rules apply to `claude_word_qa/**/*.py`:
-  - `oop-solid.mdc`, `dead-code-detection.mdc`, `security-privacy.mdc`
-  - `performance-optimization.mdc`, `error-handling-logging.mdc`
-  - `data-validation.mdc`, `monitoring-observability.mdc`
-- **Configuration Files**: `configuration-management.mdc` applies to `*.toml`, `*.yaml`, `*.json`
-- **Documentation**: `documentation-standards.mdc` applies to `**/*.md` and Python files
+- **Python application code**: `**/*.py` (excluding `tests/`), typically governed by:
+  - `composition-container.mdc`, `oop-solid.mdc`, `dead-code-detection.mdc`, `security-privacy.mdc`
+  - `performance-optimization.mdc`, `error-handling-logging.mdc`, `data-validation.mdc`, `monitoring-observability.mdc`, `mypy-type-safety.mdc`
+- **Configuration files**: `configuration-management.mdc` applies to `*.toml`, `*.yaml`, `*.json`
+- **Documentation**: `documentation-standards.mdc` applies to `**/*.md` and code comment sections
 - **Dependencies**: `dependency-management.mdc` applies to `pyproject.toml` and `requirements*.txt`
-- **Test Files**: Multiple rules apply to `tests/**/*.py` and `**/*test*.py`:
-  - `test-quality-requirements.mdc`, `test-coverage-standards.mdc`, `tests-location.mdc`
-- **All Files**: `git-commit-guidance.mdc` and `windows-shell.mdc` apply globally
+- **Test code**: `tests/**/*.py` and `**/*test*.py`:
+  - `test-quality-requirements.mdc`, `test-coverage-standards.mdc`, `tests-location.mdc`, `env-var-safety.mdc`
+- **All files**: `git-commit-guidance.mdc`, `windows-shell.mdc`, and `generic-rules-only.mdc` apply globally
 
 ### Priority Levels
 - **Critical**: Core project standards that must never be violated
@@ -88,3 +92,10 @@ Rules are processed based on:
 - **File Matching**: Rules only apply to targeted file patterns
 
 This ensures consistent, efficient, and contextually appropriate AI assistance throughout the project.
+
+## Enforcement Hooks Examples
+
+- **Environment safety**: Autouse pytest fixture snapshots and restores `os.environ`, failing tests on leaks; CI snapshots env at job start/end and fails on diffs.
+- **Destructive ops**: Commands refuse execution without an env opt-in and `--force`; display counts and confirmations; log warnings before and results after.
+- **Centralized logging**: All modules obtain a logger via a centralized setup; UI output is not duplicated in logs; optional JSON logs via env toggle.
+- **Composition root**: CLI/orchestrators obtain dependencies via a small container; no direct instantiation of infrastructure inside business logic.

@@ -1,11 +1,42 @@
 ---
 alwaysApply: true
-appliesTo: ["tests/**/*.py", "claude_word_qa/**/*.py"]
 priority: critical
 context: ["testing", "quality", "reliability"]
+appliesTo: ["tests/**/*.py", "**/*test*.py"]
 ---
 
-# Test Quality Requirements
+# Behavior-Driven Testing Standards
+
+All tests must follow behavior-driven development principles and be placed in the `tests/` directory.
+
+## MANDATORY CHECKPOINT: Before writing ANY test
+
+### Test Quality Assessment Protocol (REQUIRED)
+**STOP and ask yourself:** "Does this test follow behavior-driven principles and add real value?"
+
+**Required Analysis - Check ALL 10 criteria:**
+1. **Behavior-driven**: Does it test WHAT the system does, not HOW it does it?
+2. **Integration focus**: Does it test components working together, not just isolated units?
+3. **Public contracts**: Does it test the public API/interface, not internal implementation?
+4. **Meaningful assertions**: Does it verify actual business value, not trivial properties?
+5. **Real-world scenarios**: Does it reflect actual user workflows and use cases?
+6. **Realistic errors**: Does it test genuine failure modes, not contrived exceptions?
+7. **Non-redundant**: Does it test something not already covered by other tests?
+8. **Boundary testing**: Does it explore edge cases and input boundaries?
+9. **Business logic**: Does it test domain logic, not framework artifacts?
+10. **User value**: Does it verify the system solves real user problems?
+
+**Required Response:**
+- If ANY criterion fails → **REDESIGN THE TEST** to meet behavior-driven standards
+- If ALL criteria pass → **PROCEED with test implementation**
+
+### Verification Checkpoint
+After assessment, you must state:
+- "I have completed the mandatory test quality assessment"
+- "This test meets all 10 behavior-driven criteria: [Yes/No]"
+- "Based on this assessment, I am [proceeding/redesigning the test]"
+
+# Test Passage Requirements
 
 All tests must pass without exception. This is a non-negotiable requirement for code quality and system reliability.
 
