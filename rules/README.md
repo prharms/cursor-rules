@@ -25,6 +25,7 @@ This directory contains organized rule files that guide the AI assistant's behav
 - **`monitoring-observability.mdc`** - Monitoring, metrics, and health checks
 - **`windows-shell.mdc`** - Windows PowerShell command guidelines and restrictions
 - **`git-commit-guidance.mdc`** - Version control best practices
+- **`sql-schema-qualification.mdc`** - Require schema-qualified SQL for PostgreSQL (e.g., `public.table`)
 
 ### Medium Priority Rules
 - **`test-coverage-standards.mdc`** - 80% minimum test coverage per module requirement

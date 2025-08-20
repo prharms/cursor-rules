@@ -48,7 +48,7 @@ After assessment, you must state:
 
 **Example Structure:**
 ```python
-# claude_word_qa/config.py
+# your_app/config.py
 from dataclasses import dataclass
 from typing import Optional
 import os
@@ -60,14 +60,14 @@ class DatabaseConfig:
     max_connections: int = 10
 
 @dataclass
-class EmbeddingConfig:
-    model_name: str = "all-MiniLM-L6-v2"
+class ProcessingConfig:
+    model_name: str = "your-model-name"
     max_input_length: int = 512
     batch_size: int = 32
-    cache_embeddings: bool = True
+    cache_enabled: bool = True
 
 @dataclass
-class RAGConfig:
+class QueryConfig:
     chunk_max_chars: int = 1400
     chunk_overlap: int = 200
     max_results: int = 10
@@ -75,7 +75,7 @@ class RAGConfig:
 
 @dataclass
 class APIConfig:
-    anthropic_model: str = "claude-3-5-sonnet-20241022"
+    model_name: str = "your-api-model"
     max_tokens: int = 4000
     temperature: float = 0.0
     timeout: int = 60
@@ -83,8 +83,8 @@ class APIConfig:
 @dataclass
 class AppConfig:
     database: DatabaseConfig = DatabaseConfig()
-    embedding: EmbeddingConfig = EmbeddingConfig()
-    rag: RAGConfig = RAGConfig()
+    processing: ProcessingConfig = ProcessingConfig()
+    query: QueryConfig = QueryConfig()
     api: APIConfig = APIConfig()
     
     def __post_init__(self):
@@ -114,12 +114,12 @@ class AppConfig:
 # Environment-aware configuration
 class EnvironmentConfig:
     def __init__(self):
-        self.environment = os.getenv('CLAUDE_QA_ENV', 'development')
+        self.environment = os.getenv('APP_ENV', 'development')
         self.debug = self.environment == 'development'
         
         # Environment-specific database paths
         if self.environment == 'production':
-            self.database_path = os.getenv('DATABASE_PATH', '/opt/claude-qa/data/production.db')
+            self.database_path = os.getenv('DATABASE_PATH', '/opt/app/data/production.db')
         elif self.environment == 'test':
             self.database_path = ':memory:'  # In-memory for tests
         else:
@@ -155,15 +155,15 @@ class ConfigValidator:
                 raise ConfigurationError(f"Cannot create database directory: {db_dir}")
     
     def validate_api_config(self, config: APIConfig):
-        api_key = os.getenv('ANTHROPIC_API_KEY')
+        api_key = os.getenv('API_KEY')
         if not api_key:
             raise ConfigurationError(
-                "ANTHROPIC_API_KEY environment variable is required. "
-                "Get your API key from https://console.anthropic.com/"
+                "API_KEY environment variable is required. "
+                "Get your API key from your service provider"
             )
         
-        if not api_key.startswith('sk-ant-'):
-            raise ConfigurationError("Invalid Anthropic API key format")
+        if not api_key.startswith('your-api-prefix-'):
+            raise ConfigurationError("Invalid API key format")
 ```
 
 ### D. Configuration Documentation
@@ -183,15 +183,15 @@ class ConfigValidator:
 ```python
 # Well-documented configuration
 @dataclass
-class RAGConfig:
-    """Configuration for Retrieval-Augmented Generation system."""
+class QueryConfig:
+    """Configuration for query processing system."""
     
     chunk_max_chars: int = 1400
     """Maximum characters per document chunk. 
     
     Larger chunks provide more context but may exceed model limits.
     Valid range: 100-2000. Default: 1400.
-    Environment variable: CLAUDE_QA_CHUNK_SIZE
+    Environment variable: APP_CHUNK_SIZE
     """
     
     chunk_overlap: int = 200
@@ -199,7 +199,7 @@ class RAGConfig:
     
     Overlap ensures important information isn't lost at chunk boundaries.
     Should be 10-30% of chunk_max_chars. Default: 200.
-    Environment variable: CLAUDE_QA_CHUNK_OVERLAP
+    Environment variable: APP_CHUNK_OVERLAP
     """
 ```
 

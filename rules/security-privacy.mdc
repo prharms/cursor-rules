@@ -80,15 +80,15 @@ import os
 from .exceptions import ConfigurationError
 
 def get_api_key() -> str:
-    api_key = os.getenv('ANTHROPIC_API_KEY')
+    api_key = os.getenv('API_KEY')
     if not api_key:
-        raise ConfigurationError("ANTHROPIC_API_KEY environment variable required")
-    if not api_key.startswith('sk-ant-'):
+        raise ConfigurationError("API_KEY environment variable required")
+    if not api_key.startswith('your-prefix-'):
         raise ConfigurationError("Invalid API key format")
     return api_key
 
 # Bad: Hardcoded credentials
-API_KEY = "sk-ant-1234567890abcdef"  # NEVER DO THIS
+API_KEY = "your-prefix-1234567890abcdef"  # NEVER DO THIS
 ```
 
 ### C. Input Validation and Sanitization

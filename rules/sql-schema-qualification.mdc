@@ -1,0 +1,40 @@
+# PostgreSQL SQL Schema Qualification Rule
+
+All SQL that targets PostgreSQL MUST schema-qualify table and view names to prevent accidental resolution via `search_path`.
+
+## Rationale
+- Pooled connections can retain session-level `search_path` changes
+- Roles and databases may have different default `search_path` values
+- Unqualified names can silently resolve to wrong schemas, causing data corruption or runtime errors
+
+## Requirements
+- Always prefix tables and views with the intended schema, typically `public`:
+  - `public.users`, `public.orders`, `public.products`, `public.sessions`, `public.audit_logs`, etc.
+- Qualify joins, DML, DDL, and verification queries:
+  - SELECT ... FROM `public.table_name`
+  - INSERT INTO `public.table_name` (...)
+  - UPDATE `public.table_name` SET ...
+  - DELETE FROM `public.table_name`
+  - ALTER TABLE `public.table_name` ...
+- Keep ORM models consistent with schema (e.g., SQLAlchemy `__table_args__ = {"schema": "public"}`) and ensure FK targets are schema-qualified
+
+## Approved Patterns (examples)
+```sql
+SELECT COUNT(*) FROM public.orders WHERE session_id = :sid;
+INSERT INTO public.users (columns...) VALUES (...);
+DELETE FROM public.audit_logs WHERE session_id = :sid;
+ALTER TABLE public.orders ALTER COLUMN status TYPE varchar(20) USING status::text;
+```
+
+## Disallowed
+- Unqualified table or view names in any SQL sent to PostgreSQL:
+  - `FROM orders` (disallowed)
+  - `DELETE FROM users` (disallowed)
+
+## Testing Guidance
+- Unit tests should not assert exact strings that forbid schema qualifiers; prefer assertions tolerant of `public.` (or assert the qualified form)
+- Add checks for the presence of `public.` in critical SQL generators when possible
+
+## Migration Guidance
+- If existing databases contain legacy schemas or column types, provide compatibility guards (e.g., `ALTER` statements) during startup, but keep all new code schema-qualified
+

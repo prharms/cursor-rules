@@ -48,7 +48,7 @@ All code must implement comprehensive error handling with structured logging for
 - Tests may override verbosity/format via the centralized function only
 
 ### Unified Logging Style (MANDATORY)
-- Single logger namespace: root logger `legiscan_loader`; child loggers per module (e.g., `legiscan_loader.commands`)
+- Single logger namespace: root logger `your_app`; child loggers per module (e.g., `your_app.commands`)
 - One format per transport:
   - Console (human): concise text, no duplicate UI lines, WARNING+ by default
   - File/JSON: structured payloads; include operation, status, duration, counts
@@ -118,18 +118,18 @@ After assessment, you must state:
 **Example:**
 ```python
 # Good: Specific exception hierarchy
-class ClaudeQAError(Exception):
-    """Base exception for Claude QA application."""
+class AppError(Exception):
+    """Base exception for the application."""
     pass
 
-class DocumentProcessingError(ClaudeQAError):
+class DocumentProcessingError(AppError):
     """Raised when document processing fails."""
     def __init__(self, message: str, file_path: str = None, cause: Exception = None):
         super().__init__(message)
         self.file_path = file_path
         self.cause = cause
 
-class DatabaseError(ClaudeQAError):
+class DatabaseError(AppError):
     """Raised when database operations fail."""
     pass
 
@@ -364,12 +364,12 @@ STRUCTURED_FORMAT = {
 
 def configure_logging(verbose: bool = False, json_logs: bool = False) -> logging.Logger:
     """Centralized logger configuration.
-    - Single root: 'legiscan_loader'
+    - Single root: 'your_app'
     - Console handler for humans; optional JSON/file handler for ingestion
     - Prevent duplicate handlers
     """
     import logging, sys, json
-    logger = logging.getLogger('legiscan_loader')
+    logger = logging.getLogger('your_app')
     logger.setLevel(logging.DEBUG if verbose else logging.INFO)
     logger.handlers.clear()
     logger.propagate = False
